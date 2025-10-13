@@ -1,0 +1,155 @@
+.prompt-editor {
+  flex: 1;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.prompt-editor.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-editor-state {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-button.danger {
+  color: #ef4444;
+}
+
+.icon-button.danger:hover {
+  background: #fee2e2;
+}
+
+.save-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.save-button.has-changes {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+}
+
+.save-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.editor-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.title-input {
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  outline: none;
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.title-input::placeholder {
+  color: #d1d5db;
+}
+
+.editor-meta {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b7280;
+}
+
+.folder-select {
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.folder-select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.content-textarea {
+  flex: 1;
+  width: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #374151;
+  resize: none;
+  font-family: inherit;
+}
+
+.content-textarea::placeholder {
+  color: #d1d5db;
+}
+
+.editor-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 16px;
+}
+
+.character-count {
+  font-size: 12px;
+  color: #9ca3af;
+}
