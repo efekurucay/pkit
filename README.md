@@ -1,6 +1,6 @@
 # PromptKit
 
-WhatsApp/Telegram tarzı arayüze sahip, tamamen local çalışan prompt yönetimi ve clipboard geçmişi uygulaması.
+ arayüze sahip, tamamen local çalışan prompt yönetimi ve clipboard geçmişi uygulaması.
 
 ## Özellikler
 
