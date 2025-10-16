@@ -59,8 +59,10 @@ function createWindow() {
     mainWindow.show();
   });
 
-  // Her zaman DevTools'u aç (debug için)
-  mainWindow.webContents.openDevTools();
+  // DevTools sadece development modunda aç
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
   
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
     console.error('Failed to load:', errorCode, errorDescription);
@@ -109,6 +111,9 @@ app.on('before-quit', () => {
   app.isQuitting = true;
   if (clipboardMonitor) {
     clipboardMonitor.stop();
+  }
+  if (db) {
+    db.close();
   }
 });
 

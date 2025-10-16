@@ -149,14 +149,20 @@ class DatabaseManager {
     if (folderId === null || folderId === 'all') {
       return this.getAllPrompts();
     }
-    const result = this.db.exec(`
+    const stmt = this.db.prepare(`
       SELECT p.*, f.name as folder_name, f.color as folder_color
       FROM prompts p
       LEFT JOIN folders f ON p.folder_id = f.id
-      WHERE p.folder_id = ${folderId}
+      WHERE p.folder_id = ?
       ORDER BY p.updated_at DESC
     `);
-    return this.rowsToObjects(result);
+    stmt.bind([folderId]);
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
+    stmt.free();
+    return result;
   }
 
   createPrompt(prompt) {
@@ -188,14 +194,21 @@ class DatabaseManager {
   }
 
   searchPrompts(query) {
-    const result = this.db.exec(`
+    const searchPattern = `%${query}%`;
+    const stmt = this.db.prepare(`
       SELECT p.*, f.name as folder_name, f.color as folder_color
       FROM prompts p
       LEFT JOIN folders f ON p.folder_id = f.id
-      WHERE p.title LIKE '%${query}%' OR p.content LIKE '%${query}%' OR p.tags LIKE '%${query}%'
+      WHERE p.title LIKE ? OR p.content LIKE ? OR p.tags LIKE ?
       ORDER BY p.updated_at DESC
     `);
-    return this.rowsToObjects(result);
+    stmt.bind([searchPattern, searchPattern, searchPattern]);
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
+    stmt.free();
+    return result;
   }
 
   // Clipboard
@@ -210,10 +223,14 @@ class DatabaseManager {
     // Check if duplicates should be ignored
     const ignoreDuplicates = this.getSetting('clipboard_ignore_duplicates') === 'true';
     if (ignoreDuplicates) {
-      const result = this.db.exec(`SELECT id FROM clipboard_history WHERE content = '${content.replace(/'/g, "''")}' ORDER BY created_at DESC LIMIT 1`);
-      if (result.length > 0 && result[0].values.length > 0) {
-        return { id: result[0].values[0][0] };
+      const stmt = this.db.prepare('SELECT id FROM clipboard_history WHERE content = ? ORDER BY created_at DESC LIMIT 1');
+      stmt.bind([content]);
+      if (stmt.step()) {
+        const existingId = stmt.getAsObject().id;
+        stmt.free();
+        return { id: existingId };
       }
+      stmt.free();
     }
 
     this.db.run(
@@ -239,8 +256,15 @@ class DatabaseManager {
   }
 
   searchClipboard(query) {
-    const result = this.db.exec(`SELECT * FROM clipboard_history WHERE content LIKE '%${query}%' ORDER BY created_at DESC LIMIT 100`);
-    return this.rowsToObjects(result);
+    const searchPattern = `%${query}%`;
+    const stmt = this.db.prepare('SELECT * FROM clipboard_history WHERE content LIKE ? ORDER BY created_at DESC LIMIT 100');
+    stmt.bind([searchPattern]);
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
+    stmt.free();
+    return result;
   }
 
   deleteClipboardItem(id) {
@@ -257,10 +281,14 @@ class DatabaseManager {
 
   // Settings
   getSetting(key) {
-    const result = this.db.exec(`SELECT value FROM settings WHERE key = '${key}'`);
-    if (result.length > 0 && result[0].values.length > 0) {
-      return result[0].values[0][0];
+    const stmt = this.db.prepare('SELECT value FROM settings WHERE key = ?');
+    stmt.bind([key]);
+    if (stmt.step()) {
+      const value = stmt.getAsObject().value;
+      stmt.free();
+      return value;
     }
+    stmt.free();
     return null;
   }
 

@@ -21,6 +21,7 @@ setTimeout(() => {
   });
 }, 5000);
 
+
 process.on('SIGINT', () => {
   reactProcess.kill();
   process.exit();

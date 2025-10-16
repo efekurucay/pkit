@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Folder, FolderPlus, ChevronRight, ChevronDown, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import FolderDialog from './FolderDialog';
 import './Sidebar.css';
+import './FolderDialog.css';
 
 function Sidebar({ folders, selectedFolder, onSelectFolder, onCreateFolder, onUpdateFolder, onDeleteFolder }) {
   const [isCreating, setIsCreating] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [expandedFolders, setExpandedFolders] = useState(new Set());
   const [contextMenu, setContextMenu] = useState(null);
+  const [editingFolder, setEditingFolder] = useState(null);
+  const [showDialog, setShowDialog] = useState(false);
 
   const handleCreateFolder = () => {
     if (newFolderName.trim()) {
@@ -32,8 +36,24 @@ function Sidebar({ folders, selectedFolder, onSelectFolder, onCreateFolder, onUp
     setContextMenu({ x: e.clientX, y: e.clientY, folder });
   };
 
+  const handleEditFolder = (folder) => {
+    setEditingFolder(folder);
+    setShowDialog(true);
+    setContextMenu(null);
+  };
+
+  const handleSaveFolder = (folderData) => {
+    if (editingFolder) {
+      onUpdateFolder(editingFolder.id, folderData);
+    } else {
+      onCreateFolder(folderData);
+    }
+    setShowDialog(false);
+    setEditingFolder(null);
+  };
+
   const handleDeleteFolder = (folder) => {
-    if (window.confirm(`"${folder.name}" klasörünü silmek istediğinize emin misiniz?`)) {
+    if (window.confirm(`"${folder.name}" klasörünü ve tüm içeriğini silmek istediğinize emin misiniz?`)) {
       onDeleteFolder(folder.id);
     }
     setContextMenu(null);
@@ -78,8 +98,9 @@ function Sidebar({ folders, selectedFolder, onSelectFolder, onCreateFolder, onUp
               {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </button>
           )}
+          {!hasChildren && <div className="folder-spacer" />}
           <Folder size={18} style={{ color: folder.color }} />
-          <span className="folder-name">{folder.name}</span>
+          <span className="folder-name" title={folder.name}>{folder.name}</span>
         </div>
         {hasChildren && isExpanded && (
           <div className="folder-children">
@@ -98,7 +119,10 @@ function Sidebar({ folders, selectedFolder, onSelectFolder, onCreateFolder, onUp
         <h2>Klasörler</h2>
         <button
           className="icon-button"
-          onClick={() => setIsCreating(true)}
+          onClick={() => {
+            setEditingFolder(null);
+            setShowDialog(true);
+          }}
           title="Yeni Klasör"
         >
           <FolderPlus size={20} />
@@ -151,16 +175,10 @@ function Sidebar({ folders, selectedFolder, onSelectFolder, onCreateFolder, onUp
           >
             <button
               className="context-menu-item"
-              onClick={() => {
-                const newName = prompt('Yeni klasör adı:', contextMenu.folder.name);
-                if (newName && newName.trim()) {
-                  onUpdateFolder(contextMenu.folder.id, { ...contextMenu.folder, name: newName.trim() });
-                }
-                setContextMenu(null);
-              }}
+              onClick={() => handleEditFolder(contextMenu.folder)}
             >
               <Edit2 size={16} />
-              Yeniden Adlandır
+              Düzenle
             </button>
             <button
               className="context-menu-item danger"
@@ -172,6 +190,16 @@ function Sidebar({ folders, selectedFolder, onSelectFolder, onCreateFolder, onUp
           </div>
         </>
       )}
+      <FolderDialog
+        isOpen={showDialog}
+        onClose={() => {
+          setShowDialog(false);
+          setEditingFolder(null);
+        }}
+        onSave={handleSaveFolder}
+        folder={editingFolder}
+        folders={folders}
+      />
     </div>
   );
 }

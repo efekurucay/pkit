@@ -21,6 +21,21 @@ function PromptEditor({ prompt, folders, onSave, onDelete, onCopy }) {
     }
   }, [prompt]);
 
+  // Ctrl+S to save
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        if (hasChanges && prompt) {
+          handleSave();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasChanges, prompt, title, content, folderId, isFavorite, tags]);
+
   const handleSave = () => {
     if (prompt && hasChanges) {
       onSave(prompt.id, {

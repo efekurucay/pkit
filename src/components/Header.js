@@ -1,8 +1,8 @@
 import React from 'react';
-import { Search, FileText, Clipboard } from 'lucide-react';
+import { Search, FileText, Clipboard, Settings } from 'lucide-react';
 import './Header.css';
 
-function Header({ searchQuery, onSearchChange, view, onViewChange }) {
+function Header({ searchQuery, onSearchChange, view, onViewChange, onSettingsClick }) {
   return (
     <div className="header">
       <div className="header-left">
@@ -36,6 +36,13 @@ function Header({ searchQuery, onSearchChange, view, onViewChange }) {
           title="Clipboard Geçmişi"
         >
           <Clipboard size={20} />
+        </button>
+        <button
+          className="view-toggle"
+          onClick={onSettingsClick}
+          title="Ayarlar"
+        >
+          <Settings size={20} />
         </button>
       </div>
     </div>

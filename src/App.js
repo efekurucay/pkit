@@ -5,6 +5,8 @@ import PromptList from './components/PromptList';
 import PromptEditor from './components/PromptEditor';
 import ClipboardPanel from './components/ClipboardPanel';
 import Header from './components/Header';
+import Toast from './components/Toast';
+import Settings from './components/Settings';
 
 function App() {
   const [folders, setFolders] = useState([]);
@@ -15,6 +17,8 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [view, setView] = useState('prompts'); // 'prompts' or 'clipboard'
   const [isElectronReady, setIsElectronReady] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     console.log('App mounted, checking electronAPI...');
@@ -57,13 +61,15 @@ function App() {
     loadPrompts();
     loadClipboard();
 
-    // Clipboard'ı her 2 saniyede bir yenile
+    // Clipboard'ı sadece clipboard görünümündeyken yenile (5 saniyede bir)
     const interval = setInterval(() => {
-      loadClipboard();
-    }, 2000);
+      if (view === 'clipboard') {
+        loadClipboard();
+      }
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [isElectronReady]);
+  }, [isElectronReady, view]);
 
   useEffect(() => {
     if (searchQuery) {
@@ -75,17 +81,68 @@ function App() {
     }
   }, [selectedFolder, searchQuery]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+N: New prompt
+      if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        if (view === 'prompts') {
+          handleCreatePrompt({
+            title: 'Yeni Prompt',
+            content: '',
+            folder_id: selectedFolder,
+            tags: '',
+            is_favorite: false
+          });
+        }
+      }
+      // Ctrl+F: Focus search
+      if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        document.querySelector('.search-input')?.focus();
+      }
+      // Ctrl+1: Switch to prompts view
+      if (e.ctrlKey && e.key === '1') {
+        e.preventDefault();
+        setView('prompts');
+      }
+      // Ctrl+2: Switch to clipboard view
+      if (e.ctrlKey && e.key === '2') {
+        e.preventDefault();
+        setView('clipboard');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [view, selectedFolder]);
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
+
   const loadFolders = async () => {
-    if (window.electronAPI) {
-      const data = await window.electronAPI.folders.getAll();
-      setFolders(data);
+    try {
+      if (window.electronAPI) {
+        const data = await window.electronAPI.folders.getAll();
+        setFolders(data);
+      }
+    } catch (error) {
+      console.error('Error loading folders:', error);
+      showToast('Klasörler yüklenirken hata oluştu', 'error');
     }
   };
 
   const loadPrompts = async () => {
-    if (window.electronAPI) {
-      const data = await window.electronAPI.prompts.getAll();
-      setPrompts(data);
+    try {
+      if (window.electronAPI) {
+        const data = await window.electronAPI.prompts.getAll();
+        setPrompts(data);
+      }
+    } catch (error) {
+      console.error('Error loading prompts:', error);
+      showToast('Promptlar yüklenirken hata oluştu', 'error');
     }
   };
 
@@ -115,9 +172,15 @@ function App() {
   };
 
   const handleCreateFolder = async (folder) => {
-    if (window.electronAPI) {
-      await window.electronAPI.folders.create(folder);
-      loadFolders();
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.folders.create(folder);
+        loadFolders();
+        showToast('Klasör oluşturuldu', 'success');
+      }
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      showToast('Klasör oluşturulurken hata oluştu', 'error');
     }
   };
 
@@ -129,44 +192,74 @@ function App() {
   };
 
   const handleDeleteFolder = async (id) => {
-    if (window.electronAPI) {
-      await window.electronAPI.folders.delete(id);
-      loadFolders();
-      if (selectedFolder === id) {
-        setSelectedFolder(null);
-        loadPrompts();
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.folders.delete(id);
+        loadFolders();
+        if (selectedFolder === id) {
+          setSelectedFolder(null);
+          loadPrompts();
+        }
+        showToast('Klasör silindi', 'success');
       }
+    } catch (error) {
+      console.error('Error deleting folder:', error);
+      showToast('Klasör silinirken hata oluştu', 'error');
     }
   };
 
   const handleCreatePrompt = async (prompt) => {
-    if (window.electronAPI) {
-      const newPrompt = await window.electronAPI.prompts.create(prompt);
-      loadPrompts();
-      setSelectedPrompt(newPrompt);
+    try {
+      if (window.electronAPI) {
+        const newPrompt = await window.electronAPI.prompts.create(prompt);
+        loadPrompts();
+        setSelectedPrompt(newPrompt);
+        showToast('Prompt oluşturuldu', 'success');
+      }
+    } catch (error) {
+      console.error('Error creating prompt:', error);
+      showToast('Prompt oluşturulurken hata oluştu', 'error');
     }
   };
 
   const handleUpdatePrompt = async (id, prompt) => {
-    if (window.electronAPI) {
-      await window.electronAPI.prompts.update(id, prompt);
-      loadPrompts();
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.prompts.update(id, prompt);
+        loadPrompts();
+        showToast('Prompt kaydedildi', 'success');
+      }
+    } catch (error) {
+      console.error('Error updating prompt:', error);
+      showToast('Prompt kaydedilirken hata oluştu', 'error');
     }
   };
 
   const handleDeletePrompt = async (id) => {
-    if (window.electronAPI) {
-      await window.electronAPI.prompts.delete(id);
-      loadPrompts();
-      if (selectedPrompt?.id === id) {
-        setSelectedPrompt(null);
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.prompts.delete(id);
+        loadPrompts();
+        if (selectedPrompt?.id === id) {
+          setSelectedPrompt(null);
+        }
+        showToast('Prompt silindi', 'success');
       }
+    } catch (error) {
+      console.error('Error deleting prompt:', error);
+      showToast('Prompt silinirken hata oluştu', 'error');
     }
   };
 
   const handleCopyToClipboard = async (text) => {
-    if (window.electronAPI) {
-      await window.electronAPI.clipboard.copyToClipboard(text);
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.clipboard.copyToClipboard(text);
+        showToast('Panoya kopyalandı', 'success');
+      }
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      showToast('Kopyalama başarısız', 'error');
     }
   };
 
@@ -188,6 +281,7 @@ function App() {
         onSearchChange={setSearchQuery}
         view={view}
         onViewChange={setView}
+        onSettingsClick={() => setShowSettings(true)}
       />
       <div className="app-content">
         <Sidebar
@@ -223,6 +317,22 @@ function App() {
           />
         )}
       </div>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      {showSettings && (
+        <Settings
+          onClose={() => setShowSettings(false)}
+          onSave={(message) => {
+            setShowSettings(false);
+            showToast(message, 'success');
+          }}
+        />
+      )}
     </div>
   );
 }

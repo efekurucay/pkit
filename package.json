@@ -21,18 +21,25 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@radix-ui/react-slot": "^1.2.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "lucide-react": "^0.263.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "sql.js": "^1.10.3"
+    "sql.js": "^1.10.3",
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.21",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "electron": "^28.1.0",
     "electron-builder": "^24.9.1",
     "fs-extra": "^11.3.2",
+    "postcss": "^8.5.6",
     "react-scripts": "5.0.1",
+    "tailwindcss": "^4.1.14",
     "wait-on": "^7.2.0"
   },
   "browserslist": {
@@ -50,6 +57,7 @@
   "build": {
     "appId": "com.promptkit.app",
     "productName": "PromptKit",
+    "icon": "icons/icon.ico",
     "files": [
       "build/**/*",
       "src/main/**/*",
@@ -61,6 +69,7 @@
         "nsis",
         "portable"
       ],
+      "icon": "icons/icon.ico",
       "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
     "nsis": {

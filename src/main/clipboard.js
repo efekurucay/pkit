@@ -5,7 +5,7 @@ class ClipboardMonitor {
     this.db = database;
     this.interval = null;
     this.lastContent = '';
-    this.checkInterval = 500; // Check every 500ms
+    this.checkInterval = 1000; // Check every 1000ms (optimized for performance)
   }
 
   start() {
