@@ -40,6 +40,7 @@ class DatabaseManager {
         parent_id INTEGER,
         color TEXT DEFAULT '#6366f1',
         icon TEXT DEFAULT 'folder',
+        sort_order INTEGER DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         FOREIGN KEY (parent_id) REFERENCES folders(id) ON DELETE CASCADE
@@ -80,6 +81,19 @@ class DatabaseManager {
       )
     `);
 
+    // Canvases table
+    this.db.run(`
+      CREATE TABLE IF NOT EXISTS canvases (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT,
+        data TEXT NOT NULL,
+        viewport TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    `);
+
     // Create indexes
     this.db.run(`CREATE INDEX IF NOT EXISTS idx_prompts_folder ON prompts(folder_id)`);
     this.db.run(`CREATE INDEX IF NOT EXISTS idx_prompts_favorite ON prompts(is_favorite)`);
@@ -102,15 +116,15 @@ class DatabaseManager {
 
   // Folders
   getAllFolders() {
-    const result = this.db.exec('SELECT * FROM folders ORDER BY name');
+    const result = this.db.exec('SELECT * FROM folders ORDER BY sort_order, name');
     return this.rowsToObjects(result);
   }
 
   createFolder(folder) {
     const now = Date.now();
     this.db.run(
-      'INSERT INTO folders (name, parent_id, color, icon, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [folder.name, folder.parent_id || null, folder.color || '#6366f1', folder.icon || 'folder', now, now]
+      'INSERT INTO folders (name, parent_id, color, icon, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [folder.name, folder.parent_id || null, folder.color || '#6366f1', folder.icon || 'folder', folder.sort_order || 0, now, now]
     );
     const result = this.db.exec('SELECT last_insert_rowid() as id');
     const id = result[0].values[0][0];
@@ -121,8 +135,8 @@ class DatabaseManager {
   updateFolder(id, folder) {
     const now = Date.now();
     this.db.run(
-      'UPDATE folders SET name = ?, parent_id = ?, color = ?, icon = ?, updated_at = ? WHERE id = ?',
-      [folder.name, folder.parent_id || null, folder.color, folder.icon, now, id]
+      'UPDATE folders SET name = ?, parent_id = ?, color = ?, icon = ?, sort_order = ?, updated_at = ? WHERE id = ?',
+      [folder.name, folder.parent_id || null, folder.color, folder.icon, folder.sort_order, now, id]
     );
     this.saveDatabase();
     return { id, ...folder, updated_at: now };
@@ -294,6 +308,38 @@ class DatabaseManager {
 
   setSetting(key, value) {
     this.db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
+    this.saveDatabase();
+    return true;
+  }
+
+  // Canvases
+  getAllCanvases() {
+    const result = this.db.exec('SELECT * FROM canvases ORDER BY updated_at DESC');
+    return this.rowsToObjects(result);
+  }
+
+  createCanvas(canvas) {
+    const now = Date.now();
+    this.db.run(
+      'INSERT INTO canvases (id, name, description, data, viewport, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [canvas.id, canvas.name, canvas.description || '', canvas.data, canvas.viewport, now, now]
+    );
+    this.saveDatabase();
+    return { ...canvas, created_at: now, updated_at: now };
+  }
+
+  updateCanvas(id, canvas) {
+    const now = Date.now();
+    this.db.run(
+      'UPDATE canvases SET name = ?, description = ?, data = ?, viewport = ?, updated_at = ? WHERE id = ?',
+      [canvas.name, canvas.description, canvas.data, canvas.viewport, now, id]
+    );
+    this.saveDatabase();
+    return { id, ...canvas, updated_at: now };
+  }
+
+  deleteCanvas(id) {
+    this.db.run('DELETE FROM canvases WHERE id = ?', [id]);
     this.saveDatabase();
     return true;
   }

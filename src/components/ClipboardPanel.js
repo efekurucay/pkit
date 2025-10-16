@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Copy, RefreshCw, Calendar, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import './ClipboardPanel.css';
 
 function ClipboardPanel({ items, onCopy, onRefresh }) {
@@ -74,8 +75,8 @@ function ClipboardPanel({ items, onCopy, onRefresh }) {
               </div>
               <div className="group-items">
                 {dateItems.map((item) => (
-                  <div key={item.id} className="clipboard-item">
-                    <div className="clipboard-item-header">
+                  <Card key={item.id} className="clipboard-item">
+                    <CardHeader>
                       <div className="clipboard-time">
                         <Clock size={12} />
                         {formatTime(item.created_at)}
@@ -88,11 +89,11 @@ function ClipboardPanel({ items, onCopy, onRefresh }) {
                         <Copy size={16} />
                         {copiedId === item.id ? 'Kopyalandı!' : 'Kopyala'}
                       </button>
-                    </div>
-                    <div className="clipboard-content-text">
+                    </CardHeader>
+                    <CardContent className="clipboard-content-text">
                       {item.content}
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </div>

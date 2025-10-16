@@ -33,7 +33,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Settings
   settings: {
     get: (key) => ipcRenderer.invoke('settings:get', key),
-    set: (key, value) => ipcRenderer.invoke('settings:set', key, value)
+    set: (key, value) => ipcRenderer.invoke('settings:set', key, value),
+  },
+  canvases: {
+    getAll: () => ipcRenderer.invoke('canvases:getAll'),
+    create: (canvas) => ipcRenderer.invoke('canvases:create', canvas),
+    update: (id, canvas) => ipcRenderer.invoke('canvases:update', id, canvas),
+    delete: (id) => ipcRenderer.invoke('canvases:delete', id),
   }
 });
 

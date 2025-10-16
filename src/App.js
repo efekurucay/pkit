@@ -4,8 +4,10 @@ import Sidebar from './components/Sidebar';
 import PromptList from './components/PromptList';
 import PromptEditor from './components/PromptEditor';
 import ClipboardPanel from './components/ClipboardPanel';
+import CanvasView from './components/CanvasView';
 import Header from './components/Header';
-import Toast from './components/Toast';
+import { Toaster } from './components/ui/sonner';
+import { toast as sonnerToast } from 'sonner';
 import Settings from './components/Settings';
 
 function App() {
@@ -15,9 +17,8 @@ function App() {
   const [selectedPrompt, setSelectedPrompt] = useState(null);
   const [clipboardItems, setClipboardItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [view, setView] = useState('prompts'); // 'prompts' or 'clipboard'
+  const [view, setView] = useState('prompts'); // 'prompts', 'clipboard', or 'canvas'
   const [isElectronReady, setIsElectronReady] = useState(false);
-  const [toast, setToast] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
@@ -112,6 +113,11 @@ function App() {
         e.preventDefault();
         setView('clipboard');
       }
+      // Ctrl+3: Switch to canvas view
+      if (e.ctrlKey && e.key === '3') {
+        e.preventDefault();
+        setView('canvas');
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -119,7 +125,17 @@ function App() {
   }, [view, selectedFolder]);
 
   const showToast = (message, type = 'info') => {
-    setToast({ message, type });
+    switch (type) {
+      case 'success':
+        sonnerToast.success(message);
+        break;
+      case 'error':
+        sonnerToast.error(message);
+        break;
+      default:
+        sonnerToast.info(message);
+        break;
+    }
   };
 
   const loadFolders = async () => {
@@ -187,8 +203,15 @@ function App() {
   const handleUpdateFolder = async (id, folder) => {
     if (window.electronAPI) {
       await window.electronAPI.folders.update(id, folder);
-      loadFolders();
+      // Optimistic update
+      setFolders((prevFolders) =>
+        prevFolders.map((f) => (f.id === id ? { ...f, ...folder } : f))
+      );
     }
+  };
+
+  const handleFoldersChange = (newFolders) => {
+    setFolders(newFolders);
   };
 
   const handleDeleteFolder = async (id) => {
@@ -284,15 +307,17 @@ function App() {
         onSettingsClick={() => setShowSettings(true)}
       />
       <div className="app-content">
-        <Sidebar
-          folders={folders}
-          selectedFolder={selectedFolder}
-          onSelectFolder={setSelectedFolder}
-          onCreateFolder={handleCreateFolder}
-          onUpdateFolder={handleUpdateFolder}
-          onDeleteFolder={handleDeleteFolder}
-        />
-        
+        {view === 'prompts' && (
+          <Sidebar
+            folders={folders}
+            selectedFolder={selectedFolder}
+            onSelectFolder={setSelectedFolder}
+            onCreateFolder={handleCreateFolder}
+            onUpdateFolder={handleUpdateFolder}
+            onDeleteFolder={handleDeleteFolder}
+            onFoldersChange={handleFoldersChange}
+          />
+        )}
         {view === 'prompts' ? (
           <>
             <PromptList
@@ -316,14 +341,9 @@ function App() {
             onRefresh={loadClipboard}
           />
         )}
+        {view === 'canvas' && <CanvasView isElectronReady={isElectronReady} />}
       </div>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      <Toaster />
       {showSettings && (
         <Settings
           onClose={() => setShowSettings(false)}

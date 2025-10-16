@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Star, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import './PromptList.css';
 
 function PromptList({ prompts, selectedPrompt, onSelectPrompt, onCreatePrompt }) {
@@ -60,38 +61,38 @@ function PromptList({ prompts, selectedPrompt, onSelectPrompt, onCreatePrompt })
           </div>
         ) : (
           prompts.map((prompt) => (
-            <div
+            <Card
               key={prompt.id}
               className={`prompt-item ${selectedPrompt?.id === prompt.id ? 'selected' : ''}`}
               onClick={() => onSelectPrompt(prompt)}
             >
-              <div className="prompt-item-header">
-                <h3 className="prompt-title">
+              <CardHeader>
+                <CardTitle className="prompt-title">
                   {prompt.is_favorite && <Star size={14} className="favorite-icon" fill="currentColor" />}
                   {prompt.title}
-                </h3>
+                </CardTitle>
                 <span className="prompt-time">
                   <Clock size={12} />
                   {formatDate(prompt.updated_at)}
                 </span>
-              </div>
-              
-              <p className="prompt-preview">
-                {prompt.content.substring(0, 100)}
-                {prompt.content.length > 100 && '...'}
-              </p>
-              
-              {prompt.folder_name && (
-                <div className="prompt-folder">
-                  <span
-                    className="folder-badge"
-                    style={{ backgroundColor: prompt.folder_color + '20', color: prompt.folder_color }}
-                  >
-                    {prompt.folder_name}
-                  </span>
-                </div>
-              )}
-            </div>
+              </CardHeader>
+              <CardContent>
+                <p className="prompt-preview">
+                  {prompt.content.substring(0, 100)}
+                  {prompt.content.length > 100 && '...'}
+                </p>
+                {prompt.folder_name && (
+                  <div className="prompt-folder">
+                    <span
+                      className="folder-badge"
+                      style={{ backgroundColor: prompt.folder_color + '20', color: prompt.folder_color }}
+                    >
+                      {prompt.folder_name}
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           ))
         )}
       </div>

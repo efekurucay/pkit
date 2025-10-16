@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, FileText, Clipboard, Settings } from 'lucide-react';
+import { Search, FileText, Clipboard, Settings, LayoutDashboard } from 'lucide-react';
 import './Header.css';
 
 function Header({ searchQuery, onSearchChange, view, onViewChange, onSettingsClick }) {
@@ -36,6 +36,13 @@ function Header({ searchQuery, onSearchChange, view, onViewChange, onSettingsCli
           title="Clipboard Geçmişi"
         >
           <Clipboard size={20} />
+        </button>
+        <button
+          className={`view-toggle ${view === 'canvas' ? 'active' : ''}`}
+          onClick={() => onViewChange('canvas')}
+          title="Canvas"
+        >
+          <LayoutDashboard size={20} />
         </button>
         <button
           className="view-toggle"

@@ -9,7 +9,10 @@ let clipboardMonitor;
 let tray;
 
 function createTray() {
-  tray = new Tray(nativeImage.createEmpty());
+  const iconPath = path.join(__dirname, '../../icons/icon.png'); // İkon yolunu düzeltin
+  const icon = nativeImage.createFromPath(iconPath);
+  tray = new Tray(icon);
+
   const contextMenu = Menu.buildFromTemplate([
     { label: 'PromptKit Aç', click: () => { if (mainWindow) mainWindow.show(); else createWindow(); } },
     { label: 'Clipboard Geçmişi', click: () => { createWindow(); } },
@@ -38,8 +41,12 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
-    }
+    },
+    icon: path.join(__dirname, '../../icons/icon.png') // Pencere ikonu
   });
+
+  // Menüyü kaldır
+  mainWindow.setMenu(null);
 
   const isDev = process.env.ELECTRON_START_URL;
   
@@ -80,10 +87,23 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(async () => {
-  db = new Database(app.getPath('userData'));
-  
-  await new Promise(resolve => {
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Başka bir örnek açılmaya çalışıldığında, mevcut pencereyi odakla ve göster
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+
+  app.whenReady().then(async () => {
+    db = new Database(app.getPath('userData'));
+    
+    await new Promise(resolve => {
     const checkDb = setInterval(() => {
       if (db.db) {
         clearInterval(checkDb);
@@ -191,3 +211,21 @@ ipcMain.handle('settings:get', async (event, key) => {
 ipcMain.handle('settings:set', async (event, key, value) => {
   return db.setSetting(key, value);
 });
+
+// Canvases
+ipcMain.handle('canvases:getAll', async () => {
+  return db.getAllCanvases();
+});
+
+ipcMain.handle('canvases:create', async (event, canvas) => {
+  return db.createCanvas(canvas);
+});
+
+ipcMain.handle('canvases:update', async (event, id, canvas) => {
+  return db.updateCanvas(id, canvas);
+});
+
+ipcMain.handle('canvases:delete', async (event, id) => {
+  return db.deleteCanvas(id);
+});
+}
